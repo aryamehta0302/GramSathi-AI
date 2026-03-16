@@ -1,0 +1,227 @@
+<div class="chat-container" id="chat-page">
+  <!-- 3D Background -->
+  <div class="bg-canvas">
+    <div class="mesh mesh-1"></div>
+    <div class="mesh mesh-2"></div>
+    <div class="mesh mesh-3"></div>
+  </div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" [class.open]="sidebarOpen()" id="chat-sidebar">
+    <!-- Sidebar Header -->
+    <div class="sidebar-header">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 32 32" fill="none">
+            <circle cx="16" cy="16" r="14" stroke="url(#chatBrand)" stroke-width="2" fill="none"/>
+            <path d="M11 20C11 20 13 23 16 23C19 23 21 20 21 20" stroke="url(#chatBrand)" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="12" cy="14" r="1.5" fill="#00d4ff"/>
+            <circle cx="20" cy="14" r="1.5" fill="#8b5cf6"/>
+            <defs>
+              <linearGradient id="chatBrand" x1="0" y1="0" x2="32" y2="32">
+                <stop stop-color="#00d4ff"/>
+                <stop offset="1" stop-color="#8b5cf6"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <span class="brand-name">Gram Sathi</span>
+      </div>
+      <button class="sidebar-close" (click)="toggleSidebar()" aria-label="Close sidebar">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- New Chat Button -->
+    <button class="new-chat-btn" (click)="newChat()" id="new-chat-btn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="12" y1="5" x2="12" y2="19"/>
+        <line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      <span>New Chat</span>
+    </button>
+
+    <!-- Conversations List -->
+    <div class="conversations-list">
+      @for (conv of chatService.conversationList(); track conv.id) {
+        <button
+          class="conv-item"
+          [class.active]="chatService.activeConversation() === conv.id"
+          (click)="selectConversation(conv.id)"
+          [id]="'conv-' + conv.id"
+        >
+          <div class="conv-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+            </svg>
+          </div>
+          <div class="conv-info">
+            <span class="conv-title">{{ conv.title }}</span>
+            <span class="conv-time">{{ getRelativeTime(conv.timestamp) }}</span>
+          </div>
+        </button>
+      }
+    </div>
+
+    <!-- Sidebar Footer (User Info) -->
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+        </div>
+        <span class="user-name">{{ authService.user()?.name || 'User' }}</span>
+      </div>
+      <button class="logout-btn" (click)="logout()" id="logout-btn" aria-label="Logout">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Sidebar Overlay (mobile) -->
+  @if (sidebarOpen()) {
+    <div class="sidebar-overlay" (click)="toggleSidebar()"></div>
+  }
+
+  <!-- Main Chat Area -->
+  <main class="chat-main">
+    <!-- Chat Header -->
+    <header class="chat-header">
+      <button class="menu-btn" (click)="toggleSidebar()" aria-label="Toggle sidebar" id="toggle-sidebar">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+      <div class="header-info">
+        <h2 class="header-title">Gram Sathi AI</h2>
+        <div class="header-status">
+          <span class="status-dot"></span>
+          <span>Online — Ready to help</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <div class="ai-badge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+          </svg>
+          <span>AI Powered</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Messages Area -->
+    <div class="messages-area" #messagesContainer id="messages-area">
+      <!-- Welcome Message -->
+      <div class="welcome-section">
+        <div class="welcome-icon">
+          <svg viewBox="0 0 48 48" fill="none">
+            <circle cx="24" cy="24" r="20" fill="url(#welcomeGrad)" opacity="0.1"/>
+            <circle cx="24" cy="24" r="20" stroke="url(#welcomeGrad)" stroke-width="1.5" fill="none"/>
+            <path d="M16 28C16 28 19 32 24 32C29 32 32 28 32 28" stroke="url(#welcomeGrad)" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="18" cy="20" r="2" fill="#00d4ff"/>
+            <circle cx="30" cy="20" r="2" fill="#8b5cf6"/>
+            <defs>
+              <linearGradient id="welcomeGrad" x1="0" y1="0" x2="48" y2="48">
+                <stop stop-color="#00d4ff"/>
+                <stop offset="1" stop-color="#8b5cf6"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <h3 class="welcome-title">Welcome to Gram Sathi AI</h3>
+        <p class="welcome-subtitle">Your intelligent assistant for agriculture, weather, and rural development.</p>
+      </div>
+
+      <!-- Messages -->
+      @for (msg of chatService.messageList(); track msg.id) {
+        <div class="message" [class.user]="msg.role === 'user'" [class.ai]="msg.role === 'ai'">
+          @if (msg.role === 'ai') {
+            <div class="msg-avatar ai-avatar">
+              <svg viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="url(#msgGrad)" stroke-width="1.5" fill="none"/>
+                <circle cx="9" cy="10" r="1.5" fill="#00d4ff"/>
+                <circle cx="15" cy="10" r="1.5" fill="#8b5cf6"/>
+                <path d="M8 15C8 15 9.5 17 12 17C14.5 17 16 15 16 15" stroke="url(#msgGrad)" stroke-width="1.5" stroke-linecap="round"/>
+                <defs>
+                  <linearGradient id="msgGrad" x1="0" y1="0" x2="24" y2="24">
+                    <stop stop-color="#00d4ff"/>
+                    <stop offset="1" stop-color="#8b5cf6"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+            </div>
+          }
+          <div class="msg-content">
+            <p class="msg-text">{{ msg.content }}</p>
+            <span class="msg-time">{{ getTimeStr(msg.timestamp) }}</span>
+          </div>
+        </div>
+      }
+
+      <!-- Typing Indicator -->
+      @if (chatService.aiTyping()) {
+        <div class="message ai typing-message">
+          <div class="msg-avatar ai-avatar">
+            <svg viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke="url(#typingGrad)" stroke-width="1.5" fill="none"/>
+              <circle cx="9" cy="10" r="1.5" fill="#00d4ff"/>
+              <circle cx="15" cy="10" r="1.5" fill="#8b5cf6"/>
+              <defs>
+                <linearGradient id="typingGrad" x1="0" y1="0" x2="24" y2="24">
+                  <stop stop-color="#00d4ff"/>
+                  <stop offset="1" stop-color="#8b5cf6"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <div class="msg-content">
+            <div class="typing-indicator" id="typing-indicator">
+              <span class="dot"></span>
+              <span class="dot"></span>
+              <span class="dot"></span>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Input Area -->
+    <div class="input-area">
+      <div class="input-container">
+        <input
+          #messageInput
+          type="text"
+          [(ngModel)]="newMessage"
+          (keydown)="onKeyDown($event)"
+          placeholder="Ask Gram Sathi anything..."
+          class="message-input"
+          id="message-input"
+          autocomplete="off"
+        />
+        <button
+          class="send-btn"
+          (click)="sendMessage()"
+          [disabled]="!newMessage.trim()"
+          id="send-btn"
+          aria-label="Send message"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="22" y1="2" x2="11" y2="13"/>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        </button>
+      </div>
+      <p class="input-hint">Gram Sathi AI may produce inaccurate information. Press Enter to send.</p>
+    </div>
+  </main>
+</div>
