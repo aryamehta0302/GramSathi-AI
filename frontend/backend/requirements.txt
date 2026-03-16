@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+pydantic
+langchain
+langchain-community
+qdrant-client
+ollama
+datasets
+python-dotenv
+numpy
+pandas
+tqdm
+sentence-transformers

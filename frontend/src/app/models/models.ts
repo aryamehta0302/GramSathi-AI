@@ -16,6 +16,7 @@ export interface Message {
   content: string;
   role: 'user' | 'ai';
   timestamp: Date;
+  sources?: string[];
 }
 
 export interface Conversation {
@@ -26,9 +27,9 @@ export interface Conversation {
   unread?: boolean;
 }
 
-export interface ChatResponse {
-  message: Message;
-  conversationId: string;
+export interface BackendChatResponse {
+  answer: string;
+  sources: string[];
 }
 
 export interface LoginRequest {
